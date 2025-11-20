@@ -1,0 +1,31 @@
+/* ui/src/components/Toolbar.css */
+
+.toolbar-container {
+    position: absolute;
+    left: 8px;
+    top: 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 50;
+}
+
+.tool-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 6px;
+    border: 1px solid #333;
+    background: #0f1627;
+    color: #ddd;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.tool-btn:hover {
+    background: #182235;
+}
+
+.tool-btn.active {
+    border-color: #38bdf8;
+    box-shadow: 0 0 4px #38bdf8;
+}

@@ -1,0 +1,26 @@
+﻿services:
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    image: ml_trade-api:latest
+    environment:
+      DEBUG: "1"
+      LOG_LEVEL: "INFO"
+      BROKER_DB_PATH: /data/paper.db
+      # BASE_URL não é preciso no servidor; remove para não confundir
+      PAPER_ALLOW_SHORT: "0"
+      PAPER_MAX_ORDER_VALUE: "5000"
+      PAPER_MAX_SYMBOL_QTY: "50"
+      PAPER_MAX_POSITION_VALUE: "20000"
+    volumes:
+      - ./api/app:/app/app
+      - ./data:/data
+    ports:
+      - "127.0.0.1:8010:8000"   # host:container — apenas UMA publicação
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:8000/_debug/health'); print('ok')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10

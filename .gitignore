@@ -1,0 +1,53 @@
+﻿# --- Node / Frontend ---
+node_modules/
+.vite/
+dist/
+.cache/
+
+# --- Python / Backend ---
+__pycache__/
+*.py[cod]
+.venv/
+env/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.sqlite3
+*.db
+# --- Segredos ---
+.env
+.env.*
+!*.example   # mantÃ©m envs de exemplo
+# --- Dados / Modelos (ignora grandes; permite samples/READMEs) ---
+data/**
+datasets/**
+models/**
+checkpoints/**
+!data/README.md
+!datasets/README.md
+!models/README.md
+!checkpoints/README.md
+# Se quiseres versionar amostras:
+# !data/samples/**
+# --- Logs & Coverage ---
+*.log
+htmlcov/
+.coverage*
+coverage/
+# --- Editor / OS ---
+.DS_Store
+.idea/
+.vscode/
+*.code-workspace
+# --- Docker scratch ---
+docker-volume/
+# Archives
+*.zip
+*.rar
+*.7z
+*.tar
+*.tar.gz
+*.tgz
+
+'exports/' | Out-File -Append -Encoding utf8 .gitignore

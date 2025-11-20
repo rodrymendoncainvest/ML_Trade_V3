@@ -1,0 +1,67 @@
+/* ui/src/components/PriceChart.css */
+
+.pc-wrapper {
+  width: 100%;
+  height: calc(100vh - 60px);
+  display: flex;
+  flex-direction: column;
+  background: #0e1114;
+}
+
+/* --- BARRA SUPERIOR --- */
+
+.pc-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 12px;
+  background: rgba(10, 13, 18, 0.6);
+  border-bottom: 1px solid #1d2530;
+  color: #fff;
+  backdrop-filter: blur(8px);
+}
+
+.pc-legend {
+  display: flex;
+  gap: 16px;
+}
+
+.tag {
+  font-size: 14px;
+  cursor: pointer;
+  opacity: 1;
+  transition: 0.15s;
+}
+
+.tag.off {
+  opacity: 0.25;
+}
+
+.pc-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.pc-controls select {
+  background: #12161d;
+  color: #fff;
+  border: 1px solid #2a313d;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+
+/* --- GRÁFICOS --- */
+
+.pc-main {
+  height: 60%;
+}
+
+.pc-rsi {
+  height: 20%;
+  border-top: 1px solid #1d2530;
+}
+
+.pc-volume {
+  height: 20%;
+  border-top: 1px solid #1d2530;
+}

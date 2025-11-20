@@ -1,0 +1,117 @@
+/* -------------------------------------------------------------
+   BASE: Tipografia consistente e reset limpo
+------------------------------------------------------------- */
+html, body, * {
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  letter-spacing: 0.15px;
+  -webkit-font-smoothing: antialiased;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --font-xl: 19px;
+  --font-lg: 16px;
+  --font-md: 14px;
+  --font-sm: 13px;
+
+  --weight-bold: 600;
+  --weight-medium: 500;
+  --weight-normal: 400;
+
+  --color-text: #e5e5e5;
+  --color-sub: #b1b1b1;
+  --color-muted: #7d8691;
+
+  --bg-base: #0d1117;
+  --bg-card: #11161c;
+  --bg-border: #1f2a34;
+}
+
+/* -------------------------------------------------------------
+   Estrutura global
+------------------------------------------------------------- */
+body {
+  background: var(--bg-base);
+  color: var(--color-text);
+}
+
+.app-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* ---------------- TOP BAR ---------------- */
+.topbar {
+  height: 58px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--bg-border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  justify-content: space-between;
+}
+
+.logo {
+  font-size: var(--font-lg);
+  font-weight: var(--weight-bold);
+}
+
+.controls {
+  display: flex;
+  gap: 18px;
+}
+
+.ctrl-group {
+  display: flex;
+  flex-direction: column;
+  font-size: var(--font-sm);
+  color: var(--color-sub);
+}
+
+.ctrl-group input,
+.ctrl-group select {
+  padding: 5px 8px;
+  background: #0f131a;
+  border: 1px solid var(--bg-border);
+  color: #fff;
+  border-radius: 4px;
+  margin-top: 3px;
+}
+
+/* ---------------- LAYOUT ---------------- */
+.layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.chart-area {
+  flex: 1;
+  overflow: hidden;
+  padding: 10px;
+}
+
+.sidepanel {
+  width: 350px;
+  padding: 14px;
+  overflow-y: auto;
+  background: var(--bg-base);
+  border-left: 1px solid var(--bg-border);
+}
+
+.sidepanel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidepanel::-webkit-scrollbar-thumb {
+  background: var(--bg-border);
+  border-radius: 4px;
+}
+
+.sidepanel > * {
+  margin-bottom: 26px;
+}

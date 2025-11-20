@@ -1,0 +1,128 @@
+/* -------------------------------------------------------------
+   MTF – Painel Principal
+------------------------------------------------------------- */
+.mtf-card {
+  background: var(--bg-card);
+  border: 1px solid var(--bg-border);
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.mtf-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.mtf-title {
+  font-size: var(--font-lg);
+  font-weight: var(--weight-bold);
+}
+
+.mtf-refresh {
+  padding: 6px 12px;
+  font-size: var(--font-sm);
+  background: #1f6feb;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+}
+.mtf-refresh:disabled {
+  background: #2f3a4b;
+  cursor: not-allowed;
+}
+
+.mtf-loading,
+.mtf-error {
+  padding: 12px;
+  font-size: var(--font-md);
+  color: var(--color-sub);
+}
+
+/* -------------------------------------------------------------
+   Estrutura interna
+------------------------------------------------------------- */
+.mtf-body {
+  font-size: var(--font-md);
+}
+
+.mtf-final {
+  margin-bottom: 20px;
+  font-size: var(--font-md);
+}
+
+.mtf-final-value {
+  font-weight: var(--weight-bold);
+}
+
+/* -------------------------------------------------------------
+   Timeframe Block
+------------------------------------------------------------- */
+.mtf-block {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--bg-border);
+}
+
+.mtf-block:last-child {
+  border-bottom: none;
+}
+
+.mtf-tf-title {
+  font-size: var(--font-md);
+  font-weight: var(--weight-bold);
+  margin-bottom: 6px;
+}
+
+.mtf-row {
+  margin-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.mtf-label {
+  color: var(--color-muted);
+}
+
+.mtf-value {
+  font-weight: var(--weight-medium);
+}
+
+/* -------------------------------------------------------------
+   NOVAS BARRAS MTF – estilo TradingView
+------------------------------------------------------------- */
+.mtf-bar {
+  margin-top: 8px;
+  height: 12px;
+  border-radius: 6px;
+  background: #1a1f26;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 0 4px #0005;
+}
+
+/* cores */
+.mtf-bar--buy::after {
+  background: linear-gradient(90deg, #2ecc71, #1ea85d);
+}
+
+.mtf-bar--sell::after {
+  background: linear-gradient(90deg, #e74c3c, #c0392b);
+}
+
+.mtf-bar--hold::after {
+  background: linear-gradient(90deg, #9ba4b5, #78808f);
+}
+
+/* progress perfumado */
+.mtf-bar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.88;
+  transition: 0.25s ease;
+}

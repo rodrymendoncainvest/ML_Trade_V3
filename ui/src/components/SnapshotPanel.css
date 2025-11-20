@@ -1,0 +1,40 @@
+.snap-rsi-label {
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.snap-rsi-bar {
+  position: relative;
+  height: 10px;
+  background: #333;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.snap-rsi-zone {
+  height: 100%;
+  float: left;
+}
+
+.snap-rsi-low {
+  width: 30%;
+  background: rgba(239, 68, 68, 0.35);
+}
+
+.snap-rsi-mid {
+  width: 40%;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.snap-rsi-high {
+  width: 30%;
+  background: rgba(34, 197, 94, 0.35);
+}
+
+.snap-rsi-pointer {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 16px;
+  background: yellow;
+}

@@ -1,0 +1,7 @@
+* text=auto
+*.ps1 eol=crlf
+*.sh eol=lf
+*.py eol=lf
+*.ts eol=lf
+*.tsx eol=lf
+*.md eol=lf
