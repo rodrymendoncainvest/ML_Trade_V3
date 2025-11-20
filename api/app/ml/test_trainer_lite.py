@@ -7,15 +7,16 @@ import pandas as pd
 from ml.model_trainer_lite import ModelTrainerLite
 
 # Caminho correto para api/data
+# Estamos em: api/app/ml/test_trainer_lite.py
+# Subir 3 níveis → api/
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 DATA_CLEAN = os.path.join(ROOT, "data", "clean")
 
-
 def load_clean(symbol: str):
     """
-    Lê o CSV limpo do símbolo.
+    Lê o CSV limpo do símbolo — exatamente como existe no disco.
     """
-    filename = f"{symbol.replace('.', '_')}_1H_clean.csv"
+    filename = f"{symbol}_1H_clean.csv"
     path = os.path.join(DATA_CLEAN, filename)
 
     print(f"→ A carregar CSV limpo de: {path}")

@@ -12,9 +12,13 @@ from ml.lstm_model_lite import LSTMLiteModel
 
 # ================================================================
 # Caminho consistente: api/data/models/
+# Este ficheiro está em: api/app/ml/model_trainer_lite.py
+# Subimos 3 níveis → api/
 # ================================================================
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-MODEL_DIR = os.path.join(ROOT, "data", "models")
+DATA_DIR = os.path.join(ROOT, "data")
+MODEL_DIR = os.path.join(DATA_DIR, "models")
+
 os.makedirs(MODEL_DIR, exist_ok=True)
 
 
@@ -33,7 +37,7 @@ class ModelTrainerLite:
 
         self.builder = DatasetBuilderLite(sequence_length=self.seq_len)
 
-        # caminhos finais
+        # caminhos finais corretos
         self.model_path = os.path.join(MODEL_DIR, f"{model_key}.pt")
         self.scaler_path = os.path.join(MODEL_DIR, f"{model_key}_scaler.pkl")
         self.features_path = os.path.join(MODEL_DIR, f"{model_key}_features.txt")
@@ -49,10 +53,7 @@ class ModelTrainerLite:
         input_size = X.shape[2]
         num_classes = 5
 
-        model = LSTMLiteModel(
-            input_size=input_size,
-            num_classes=num_classes
-        )
+        model = LSTMLiteModel(input_size=input_size, num_classes=num_classes)
         model.train()
 
         X_tensor = torch.tensor(X, dtype=torch.float32)
