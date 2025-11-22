@@ -1,140 +1,104 @@
+# ============================================================
+#  DATA MANAGER — limpeza robusta para CSVs do yfinance
+# ============================================================
+
 import os
-import sys
 import pandas as pd
-from pathlib import Path
-
-# ============================================================
-#  DIRECTÓRIOS OFICIAIS
-# ============================================================
-
-BASE_DIR = Path(__file__).resolve().parents[2] / "data"
-HISTORY_DIR = BASE_DIR / "history"
-CLEAN_DIR   = BASE_DIR / "clean"
-FEATURE_DIR = BASE_DIR / "features"
-
-for d in [HISTORY_DIR, CLEAN_DIR, FEATURE_DIR]:
-    d.mkdir(parents=True, exist_ok=True)
 
 
-# ============================================================
-#  FUNÇÃO: carregar CSV bruto (Yahoo OU TradingView)
-# ============================================================
+class DataManager:
+    def __init__(self):
+        # ROOT = api/
+        self.ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+        self.DATA_DIR = os.path.join(self.ROOT, "data")
+        self.HIST_DIR = os.path.join(self.DATA_DIR, "history")
+        self.CLEAN_DIR = os.path.join(self.DATA_DIR, "clean")
 
-def load_raw(symbol: str) -> pd.DataFrame:
-    """
-    Carrega CSV bruto gerado pelo data_downloader (Yahoo Finance)
-    OU um CSV exportado do TradingView.
-    Deteta automaticamente o formato.
-    """
+        os.makedirs(self.HIST_DIR, exist_ok=True)
+        os.makedirs(self.CLEAN_DIR, exist_ok=True)
 
-    fname = f"{symbol}_1H.csv"
-    path = HISTORY_DIR / fname
+    # ------------------------------------------------------------
+    # DETEÇÃO AUTOMÁTICA DE MULTI-HEADER
+    # ------------------------------------------------------------
+    def _is_multi_header(self, df: pd.DataFrame) -> bool:
+        # Se o CSV tem colunas tipo MultiIndex, é multi-header
+        if isinstance(df.columns, pd.MultiIndex):
+            return True
 
-    if not path.exists():
-        raise RuntimeError(f"CSV não encontrado: {path}")
+        # Se alguma coluna parece ser nome de ticker repetido
+        # exemplo: "GALP.LS" "GALP.LS" "GALP.LS" ...
+        vals = df.columns.astype(str)
+        if all(v == vals[0] for v in vals):
+            return True
 
-    df = pd.read_csv(path)
+        return False
 
-    # --------------------------------------------------------
-    # CASO 1 — Ficheiro Yahoo Finance (index datetime)
-    # --------------------------------------------------------
-    if "Price" not in df.columns:
-        # Yahoo: datetime está como índice ou como coluna
-        if "Unnamed: 0" in df.columns:
-            # Yahoo às vezes grava índice com nome estranho
-            df = df.rename(columns={"Unnamed: 0": "datetime"})
-            df["datetime"] = pd.to_datetime(df["datetime"], utc=True)
-            df = df.set_index("datetime")
-        elif df.columns[0].lower() in ["datetime", "date", "time"]:
-            # Outro formato comum
-            df[df.columns[0]] = pd.to_datetime(df[df.columns[0]], utc=True)
-            df = df.set_index(df.columns[0])
-        else:
-            raise RuntimeError("Formato Yahoo desconhecido no CSV.")
+    # ------------------------------------------------------------
+    # LOADER ROBUSTO
+    #   - identifica multi-header
+    #   - ignora linhas lixo
+    # ------------------------------------------------------------
+    def _load_raw(self, path: str) -> pd.DataFrame:
 
-        df.index.name = "timestamp"
+        # 1) tentar leitura normal
+        try:
+            df = pd.read_csv(path, index_col=0)
+        except Exception:
+            df = None
 
-        # converter numéricas
-        for col in ["open","high","low","close","volume"]:
-            if col in df.columns:
-                df[col] = pd.to_numeric(df[col], errors="coerce")
+        # 2) se for multi-header ou falhou, usar fallback
+        if df is None or self._is_multi_header(df):
+            print("[INFO] Multi-header ou CSV sujo detetado. A limpar...")
 
-        df["symbol"] = symbol
-        df = df.sort_index()
+            raw = pd.read_csv(path, header=None)
+
+            # Remover linhas lixo
+            raw = raw[~raw[0].astype(str).str.startswith("Ticker")]
+            raw = raw[~raw[0].astype(str).str.startswith("Price")]
+
+            # Salvamos temporário sem header
+            tmp_path = path + ".tmp"
+            raw.to_csv(tmp_path, index=False, header=False)
+
+            df = pd.read_csv(tmp_path, index_col=0)
+            os.remove(tmp_path)
+
+        # 3) converter datetime
+        df.index = pd.to_datetime(df.index, utc=True, errors="coerce")
+        df = df[~df.index.isna()].sort_index()
+
         return df
 
-    # --------------------------------------------------------
-    # CASO 2 — Ficheiro TradingView (Price, Ticker, Datetime)
-    # --------------------------------------------------------
+    # ------------------------------------------------------------
+    # CLEAN PRINCIPAL
+    # ------------------------------------------------------------
+    def clean_symbol(self, symbol: str, tf: str = "1H"):
+        file_raw = os.path.join(self.HIST_DIR, f"{symbol}_{tf}.csv")
+        file_clean = os.path.join(self.CLEAN_DIR, f"{symbol}_{tf}_clean.csv")
 
-    # eliminar as duas primeiras linhas (Ticker / Datetime)
-    df = df.iloc[2:].copy()
-    df["Price"] = pd.to_datetime(df["Price"], utc=True, errors="coerce")
-    df = df.dropna(subset=["Price"])
-    df = df.set_index("Price")
+        if not os.path.exists(file_raw):
+            raise FileNotFoundError(f"Raw file not found: {file_raw}")
 
-    # converter OHLCV para numéricos
-    for col in ["open","high","low","close","volume"]:
-        if col in df.columns:
-            df[col] = pd.to_numeric(df[col], errors="coerce")
+        df = self._load_raw(file_raw)
 
-    df["symbol"] = symbol
-    df = df.sort_index()
-    return df
+        # colunas normalizadas
+        df.columns = [str(c).strip().lower().replace(" ", "_") for c in df.columns]
 
+        required = ["open", "high", "low", "close", "volume"]
+        missing = [c for c in required if c not in df.columns]
+        if missing:
+            raise ValueError(f"Missing required columns: {missing}")
 
-# ============================================================
-#  FUNÇÃO: limpeza de dados
-# ============================================================
+        df = df[required]
+        df["symbol"] = symbol
 
-def clean_dataset(symbol: str) -> pd.DataFrame:
-    df = load_raw(symbol)
+        # sanity filters
+        df = df.dropna()
+        df = df[(df["high"] >= df["low"]) & (df["volume"] >= 0)]
+        df = df.sort_index()
 
-    df = df.dropna(subset=["open", "high", "low", "close"])
-    df = df[df["volume"] > 0]
+        df.to_csv(file_clean)
+        print(f"[OK] Clean saved: {file_clean}")
+        print(df.head())
 
-    market_hours = {
-        "EU": ("09:00", "17:30"),
-        "US": ("09:30", "16:00"),
-        "HK": ("09:30", "16:00"),
-    }
-
-    if symbol.endswith(".AS"):
-        region = "EU"
-    elif symbol.endswith(".US"):
-        region = "US"
-    elif symbol.endswith(".HK"):
-        region = "HK"
-    else:
-        region = "EU"
-
-    h_start, h_end = market_hours[region]
-    df = df.between_time(h_start, h_end)
-    df = df.sort_index()
-
-    out_path = CLEAN_DIR / f"{symbol}_1H_clean.csv"
-    df.to_csv(out_path)
-
-    return df
-
-
-# ============================================================
-#  CLI
-# ============================================================
-
-def run_clean(symbol: str):
-    print(f"=== CLEANING {symbol} ===")
-    df = clean_dataset(symbol)
-    print(df.head())
-    print("...")
-    print(df.tail())
-    print("\nGuardado em:")
-    print(CLEAN_DIR / f"{symbol}_1H_clean.csv")
-
-
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Uso: python -m ml.data_manager SYMBOL")
-        sys.exit(1)
-
-    run_clean(sys.argv[1])
+        return df
