@@ -1,5 +1,7 @@
-# model_arch_V3.py
-# Arquitetura GRU + Attention + Multi-Head (direção + tendência) — V3
+# ============================================================
+#  Arquitetura GRU + Attention + Multi-Head (direção + tendência) — V3.5
+#  Versão afinada: mais capacidade, mais estabilidade
+# ============================================================
 
 import torch
 import torch.nn as nn
@@ -10,7 +12,7 @@ class AttentionLayer(nn.Module):
     """
     Atenção calibrada:
     - Normalize states before projection
-    - Produz scores estáveis
+    - Scores estáveis
     """
 
     def __init__(self, hidden_dim: int):
@@ -34,16 +36,16 @@ class AttentionLayer(nn.Module):
 class ModelV3(nn.Module):
     """
     Modelo GRU + Attention com duas heads:
-      - direction_head: 2 classes (down/up)
-      - trend_head: 3 classes (down/up/range)
+      - direction_head: 2 classes
+      - trend_head: 3 classes
     """
 
     def __init__(
         self,
         input_size: int,
-        hidden_size: int = 64,
-        num_layers: int = 2,
-        dropout: float = 0.15,
+        hidden_size: int = 128,     # <-- aumentado
+        num_layers: int = 3,        # <-- aumentado
+        dropout: float = 0.25,      # <-- aumentado
     ):
         super().__init__()
 
@@ -62,23 +64,17 @@ class ModelV3(nn.Module):
         self.ln_gru = nn.LayerNorm(hidden_size * 2)
         self.attn = AttentionLayer(hidden_dim=hidden_size * 2)
 
-        # Main feature projection
+        # Feature projection
         self.fc_main = nn.Linear(hidden_size * 2, hidden_size)
         self.ln_main = nn.LayerNorm(hidden_size)
 
         # Heads
-        self.dir_head = nn.Linear(hidden_size, 2)   # direção
-        self.trend_head = nn.Linear(hidden_size, 3) # tendência
+        self.dir_head = nn.Linear(hidden_size, 2)
+        self.trend_head = nn.Linear(hidden_size, 3)
 
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
-        """
-        x: (batch, seq_len, input_size)
-        returns:
-            dir_logits → (batch, 2)
-            trend_logits → (batch, 3)
-        """
 
         h, _ = self.gru(x)
         h = self.ln_gru(h)

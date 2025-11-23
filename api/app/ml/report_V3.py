@@ -43,6 +43,27 @@ class ReportV3:
         equity = np.array(backtest_result["equity_curve"])
         trades = backtest_result["trades"]
 
+        # ============================================================
+        # PROTEÇÃO — SE EQUITY CURVE ESTIVER VAZIA NÃO HÁ REPORT NORMAL
+        # ============================================================
+        if len(equity) < 2:
+            return {
+                "symbol": self.symbol,
+                "variant": self.variant,
+                "num_trades": len(trades),
+                "final_equity": None,
+                "pnl": None,
+                "max_drawdown_pct": None,
+                "sharpe": None,
+                "profit_factor": None,
+                "winrate": None,
+                "regime_distribution": {},
+                "warning": "Backtest não gerou equity_curve suficiente para métricas."
+            }
+
+        # ============================================================
+        # MÉTRICAS NORMAIS (SE HOUVER DADOS)
+        # ============================================================
         returns = pd.Series(equity).pct_change().fillna(0)
 
         # ---- Drawdown ----
@@ -57,7 +78,9 @@ class ReportV3:
         # ---- Winrate ----
         trade_returns = []
         for t in trades:
-            trade_returns.append(t["position"] * (t["price"] / df_clean["close"].iloc[0]))
+            trade_returns.append(
+                t["position"] * (t["price"] / df_clean["close"].iloc[0])
+            )
 
         trade_returns = np.array(trade_returns)
         winrate = (trade_returns > 0).mean() if len(trade_returns) > 0 else 0

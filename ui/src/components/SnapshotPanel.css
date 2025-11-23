@@ -1,3 +1,123 @@
+/* ============================================================
+   SNAPSHOT PANEL — LAYOUT BASE
+   ============================================================ */
+
+.snap-card {
+  background: #181818;
+  border: 1px solid #333;
+  padding: 14px;
+  border-radius: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  color: #eee;
+  font-family: Inter, sans-serif;
+}
+
+.snap-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.snap-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.snap-sub {
+  font-size: 12px;
+  opacity: 0.5;
+}
+
+.snap-body {
+  margin-bottom: 12px;
+}
+
+.snap-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.snap-label {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.snap-value {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* ============================================================
+   BOTÕES
+   ============================================================ */
+
+.snap-actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.snap-btn {
+  background: #2c2c2c;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  color: #eee;
+  transition: 0.15s;
+}
+
+.snap-btn:hover {
+  background: #3a3a3a;
+}
+
+.snap-btn.primary {
+  background: #2563eb;
+}
+
+.snap-btn.primary:hover {
+  background: #1d4ed8;
+}
+
+.snap-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   STATUS + OUTPUT
+   ============================================================ */
+
+.snap-status {
+  margin-top: 10px;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.snap-error {
+  color: #ef4444;
+}
+
+.snap-ml-output {
+  max-height: 260px;
+  overflow-y: auto;
+  background: #111;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: pre-wrap;
+  margin-top: 10px;
+}
+
+/* ============================================================
+   RSI BAR — O TEU CSS EXACTO
+   ============================================================ */
+
 .snap-rsi-label {
   font-size: 12px;
   margin-bottom: 4px;
@@ -37,4 +157,24 @@
   width: 2px;
   height: 16px;
   background: yellow;
+}
+
+/* ============================================================
+   SSE PROGRESS BAR
+   ============================================================ */
+
+.sse-bar {
+  width: 100%;
+  height: 6px;
+  background: #222;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 12px;
+}
+
+.sse-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #ef4444, #facc15, #22c55e);
+  transition: width 0.15s linear;
 }

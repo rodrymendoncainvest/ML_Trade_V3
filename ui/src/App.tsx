@@ -10,7 +10,6 @@ import MtfPanel from "./components/MtfPanel";
 
 import {
   fetchSignal,
-  fetchTrain,
   fetchMTF,
   type Timeframe,
 } from "./api";
@@ -34,20 +33,16 @@ interface SnapshotState {
   strategy: string | null;
   detail: string | null;
 
-  // RSI
   rsi: number | null;
   lower: number | null;
   upper: number | null;
 
-  // Combo
   rsi_side: string | null;
   ema_side: string | null;
 
-  // EMA
   ema_fast: number | null;
   ema_slow: number | null;
 
-  // MACD
   macd: number | null;
   macd_signal: number | null;
   macd_hist: number | null;
@@ -147,7 +142,7 @@ export default function App() {
   }
 
   // ---------------------------------------------------------
-  // HANDLE MTF (executado sempre que muda o símbolo)
+  // HANDLE MTF
   // ---------------------------------------------------------
   async function refreshMTF() {
     setMtfStatus("loading");
@@ -167,14 +162,6 @@ export default function App() {
   useEffect(() => {
     refreshMTF();
   }, [symbol]);
-
-  // ---------------------------------------------------------
-  // TREINO
-  // ---------------------------------------------------------
-  async function handleTrain() {
-    const ok = await fetchTrain();
-    alert(ok ? `Treino iniciado para ${symbol}` : "Treino não disponível.");
-  }
 
   // ---------------------------------------------------------
   // RENDER
@@ -240,12 +227,12 @@ export default function App() {
             onSelect={setSymbol}
           />
 
+          {/* ✔ SnapshotPanel V3 integrado */}
           <SnapshotPanel
             symbol={symbol}
             tf={tf}
             snapshot={snapshot}
             onSnapshot={handleSnapshot}
-            onTrain={handleTrain}
           />
 
           <MtfPanel

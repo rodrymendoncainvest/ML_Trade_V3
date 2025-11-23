@@ -1,18 +1,15 @@
 # ============================================================
-#  FEATURE ENGINEER V3 — 23 FEATURES ESTÁVEIS
+#  FEATURE ENGINEER V3 — 22 FEATURES (VERSÃO ORIGINAL)
 # ============================================================
 
 import numpy as np
 import pandas as pd
-
 
 class FeatureEngineerV3:
 
     def __init__(self):
         pass
 
-    # -------------------------------------------------------
-    # TRUE RANGE
     # -------------------------------------------------------
     def true_range(self, df):
         high = df["high"]
@@ -28,21 +25,15 @@ class FeatureEngineerV3:
         return tr
 
     # -------------------------------------------------------
-    # ATR — Welles Wilder
-    # -------------------------------------------------------
     def compute_atr(self, df, period=14):
         tr = self.true_range(df)
         atr = tr.ewm(alpha=1/period, adjust=False).mean()
-
         df["atr"] = atr
         df["atr_pct"] = atr / df["close"].replace(0, 1e-9)
         return df
 
     # -------------------------------------------------------
-    # ADX — estilo TA-LIB (com smoothing)
-    # -------------------------------------------------------
     def compute_adx(self, df, period=14):
-
         high = df["high"]
         low = df["low"]
         close = df["close"]
@@ -71,15 +62,11 @@ class FeatureEngineerV3:
         return df
 
     # -------------------------------------------------------
-    # EMAs
-    # -------------------------------------------------------
     def compute_emas(self, df):
         df["ema20"] = df["close"].ewm(span=20).mean()
         df["ema50"] = df["close"].ewm(span=50).mean()
         return df
 
-    # -------------------------------------------------------
-    # SLOPE
     # -------------------------------------------------------
     def compute_slope(self, df):
         df["ema20_slope"] = df["ema20"].diff()
@@ -87,15 +74,11 @@ class FeatureEngineerV3:
         return df
 
     # -------------------------------------------------------
-    # MOMENTUM
-    # -------------------------------------------------------
     def compute_momentum(self, df):
         df["mom_6"] = df["close"].pct_change(6).replace([np.inf, -np.inf], 0)
         df["mom_12"] = df["close"].pct_change(12).replace([np.inf, -np.inf], 0)
         return df
 
-    # -------------------------------------------------------
-    # VOLATILITY
     # -------------------------------------------------------
     def compute_volatility(self, df):
         ret = df["close"].pct_change()
@@ -103,8 +86,6 @@ class FeatureEngineerV3:
         df["vol_48"] = ret.rolling(48).std()
         return df
 
-    # -------------------------------------------------------
-    # ROLLING STATS
     # -------------------------------------------------------
     def compute_rolling(self, df):
         roll_mean = df["close"].rolling(24).mean()
@@ -116,15 +97,11 @@ class FeatureEngineerV3:
         return df
 
     # -------------------------------------------------------
-    # VOLUME NORMALIZADO 48H
-    # -------------------------------------------------------
     def compute_volume_norm(self, df):
         vol_roll = df["volume"].rolling(48).mean().replace(0, 1e-9)
         df["volume_norm"] = df["volume"] / vol_roll
         return df
 
-    # -------------------------------------------------------
-    # MAIN TRANSFORM
     # -------------------------------------------------------
     def transform(self, df_clean):
 
@@ -144,8 +121,6 @@ class FeatureEngineerV3:
         df = self.compute_rolling(df)
         df = self.compute_volume_norm(df)
 
-        # warmup + drop NaNs
-        df = df.iloc[100:]
         df = df.replace([np.inf, -np.inf], np.nan).dropna()
 
         return df

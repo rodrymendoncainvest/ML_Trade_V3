@@ -1,5 +1,7 @@
-# model_inference_V3.py
-# Inferência completa do modelo multi-head V3 (direção + tendência)
+# ============================================================
+#  MODEL INFERENCE V3 — Multi-head (direção + tendência)
+#  ALINHADO COM TRAINER V3.5 (hidden=128, layers=3, dropout=0.25)
+# ============================================================
 
 import os
 import json
@@ -8,8 +10,8 @@ import pickle
 import numpy as np
 import pandas as pd
 
-from ml.feature_engineer_V3 import FeatureEngineerV3
-from ml.model_arch_V3 import ModelV3
+from app.ml.feature_engineer_V3 import FeatureEngineerV3
+from app.ml.model_arch_V3 import ModelV3
 
 
 class ModelInferenceV3:
@@ -17,9 +19,6 @@ class ModelInferenceV3:
     Inferência multi-head:
       - direção (down/up)
       - tendência (down/up/range)
-
-    Nota: o controlo de risco (risk_mode) é feito a jusante,
-    no SignalEngineV3. Aqui só produzimos probabilidades limpas.
     """
 
     def __init__(self, symbol, variant="v3_multihead", seq_len=144):
@@ -32,64 +31,88 @@ class ModelInferenceV3:
         self.DATA_DIR = os.path.join(self.ROOT, "data")
         self.MODEL_DIR = os.path.join(self.DATA_DIR, "models")
 
-        # carregar metadados
+        # ----------------------------------------------
+        # LOAD METADATA
+        # ----------------------------------------------
         meta_path = os.path.join(self.MODEL_DIR, f"{symbol}_{variant}_meta.json")
         if not os.path.exists(meta_path):
-            raise FileNotFoundError(f"Metadata not found: {meta_path}")
+            raise FileNotFoundError(f"[Inference] Metadata not found: {meta_path}")
 
         with open(meta_path, "r") as f:
             self.meta = json.load(f)
 
-        # features usadas pelo modelo
         self.feature_cols = self.meta["features"]
+        self.input_size = len(self.feature_cols)
+        self.seq_len = self.meta.get("seq_len", seq_len)
 
-        # scaler
+        # ----------------------------------------------
+        # LOAD SCALER
+        # ----------------------------------------------
         scaler_path = os.path.join(self.MODEL_DIR, f"{symbol}_{variant}_scaler.pkl")
+        if not os.path.exists(scaler_path):
+            raise FileNotFoundError(f"[Inference] Scaler not found: {scaler_path}")
+
         with open(scaler_path, "rb") as f:
             self.scaler = pickle.load(f)
 
-        # modelo
+        # ----------------------------------------------
+        # LOAD MODEL
+        # (mesma arquitetura usada no treino)
+        # ----------------------------------------------
         model_path = os.path.join(self.MODEL_DIR, f"{symbol}_{variant}.pt")
+        if not os.path.exists(model_path):
+            raise FileNotFoundError(f"[Inference] Model .pt not found: {model_path}")
+
         self.model = ModelV3(
-            input_size=len(self.feature_cols),
-            hidden_size=64,
-            num_layers=2,
-            dropout=0.15,
+            input_size=self.input_size,
+            hidden_size=128,        # <-- ALINHADO COM TRAINER V3.5
+            num_layers=3,           # <-- ALINHADO COM TRAINER V3.5
+            dropout=0.25            # <-- ALINHADO COM TRAINER V3.5
         )
 
         self.model.load_state_dict(torch.load(model_path, map_location="cpu"))
         self.model.eval()
 
-        # feature engineer
+        # Feature engineer
         self.fe = FeatureEngineerV3()
 
     # ------------------------------------------------------------
-    # Preprocess (constrói X sequencial)
+    # Pre-processamento dos dados brutos (raw → features → escala)
     # ------------------------------------------------------------
     def preprocess(self, df_raw: pd.DataFrame):
+
         df = self.fe.transform(df_raw.copy())
 
-        # garantir que temos suficientes barras
-        if len(df) < self.seq_len:
+        missing = [c for c in self.feature_cols if c not in df.columns]
+        if missing:
             raise ValueError(
-                f"Not enough data for inference (need {self.seq_len}, have {len(df)})"
+                f"[Inference] Missing required feature columns: {missing}"
             )
 
-        df = df.iloc[-self.seq_len:]  # últimas seq_len barras
+        if len(df) < self.seq_len:
+            raise ValueError(
+                f"[Inference] Not enough data (need {self.seq_len}, have {len(df)})"
+            )
 
-        # normalizar features
-        # IMPORTANTE: usar .values para evitar o aviso do sklearn
-        features = df[self.feature_cols].values  # (seq_len, n_features)
-        df_scaled = self.scaler.transform(features)
+        # cortar último segmento
+        df = df.iloc[-self.seq_len:]
 
-        X = np.array([df_scaled], dtype=np.float32)  # (1, seq_len, features)
+        # ordenar colunas corretamente
+        features = df[self.feature_cols].values
+
+        # escalar
+        scaled = self.scaler.transform(features)
+
+        # adicionar batch
+        X = np.array([scaled], dtype=np.float32)
 
         return X
 
     # ------------------------------------------------------------
-    # Inferência
+    # Inferência completa
     # ------------------------------------------------------------
     def predict(self, df_raw: pd.DataFrame):
+
         X = self.preprocess(df_raw)
         X = torch.tensor(X, dtype=torch.float32)
 
@@ -99,12 +122,9 @@ class ModelInferenceV3:
         dir_probs = torch.softmax(dir_logits, dim=1).cpu().numpy()[0]
         trend_probs = torch.softmax(trend_logits, dim=1).cpu().numpy()[0]
 
-        direction = int(np.argmax(dir_probs))
-        trend = int(np.argmax(trend_probs))
-
         return {
             "direction_probs": dir_probs.tolist(),
             "trend_probs": trend_probs.tolist(),
-            "direction": direction,   # 0=down, 1=up
-            "trend": trend            # 0=down,1=up,2=range
+            "direction": int(np.argmax(dir_probs)),
+            "trend": int(np.argmax(trend_probs)),
         }
