@@ -6,12 +6,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-# Routers
+# Routers funcionais / não-ML
 from app.routers import quotes, signals, dataset, news
-from app.routers import signals_mtf            # MTF
-from app.routers import ml_v3                  # ML V3 REST
-from app.routers import ml_v3_sse              # ML V3 SSE (pipeline completo)
-from app.routers import ml_v3_snapshot         # ML V3 Snapshot (novo)
+from app.routers import signals_mtf
+
+# Nova arquitetura ML
+from app.routers import data_router
+from app.routers import ml_core
 
 
 # -------------------------------------------------------------
@@ -19,7 +20,7 @@ from app.routers import ml_v3_snapshot         # ML V3 Snapshot (novo)
 # -------------------------------------------------------------
 app = FastAPI(
     title="ML Trade API",
-    version="1.1.0",
+    version="2.0.0",
 )
 
 # -------------------------------------------------------------
@@ -34,7 +35,7 @@ app.add_middleware(
 )
 
 # -------------------------------------------------------------
-# INCLUDE ROUTERS (todos os existentes + SSE + snapshot)
+# INCLUDE ROUTERS (APENAS OS ATUAIS E FUNCIONAIS)
 # -------------------------------------------------------------
 app.include_router(quotes.router)
 app.include_router(signals.router)
@@ -42,10 +43,9 @@ app.include_router(signals_mtf.router)
 app.include_router(dataset.router)
 app.include_router(news.router)
 
-# ML V3
-app.include_router(ml_v3.router)          # REST
-app.include_router(ml_v3_sse.router)      # SSE pipeline
-app.include_router(ml_v3_snapshot.router) # Snapshot novo
+# --- NOVO PIPELINE MODERNO ---
+app.include_router(data_router.router)   # Download & Clean
+app.include_router(ml_core.router)       # Treino / Inferência / Backtest
 
 # -------------------------------------------------------------
 @app.get("/")
@@ -59,7 +59,7 @@ def root():
             "/signals/mtf",
             "/dataset/*",
             "/news/*",
-            "/ml_v3/*",        # REST
-            "/ml_v3/full_run_sse",  # SSE FULL PIPELINE
+            "/data/*",
+            "/ml_core/*",
         ],
     }

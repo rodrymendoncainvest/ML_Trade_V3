@@ -1,0 +1,7 @@
+{
+    "symbol": "GALP.LS",
+    "timeframe": "1H",
+    "seq_len": 55,
+    "num_features": 22,
+    "model_type": "PatchTST"
+}
